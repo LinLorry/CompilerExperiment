@@ -78,7 +78,7 @@ int scan(const char *buffer, string & s, size_t *index)
 
     if (isalpha(*p))
     {
-        while (isalpha(*(++p)) || isdigit(*p))
+        while (isalnum(*(++p)))
             s += *p;
 
         if (iskeyword(s)) result = 4;
