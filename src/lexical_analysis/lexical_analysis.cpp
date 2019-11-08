@@ -131,14 +131,15 @@ void trim(string & s)
 {
     if (!s.empty())
     {
-        size_t i = 0;
-        while (s.at(i++) < 33);
+        size_t i;
+        for (i = 0; i < s.size() && s.at(i) < 33 ; ++i);
+        if (i != 0) s.erase(0, i);
 
-        if (i != 1) s.erase(0, i - 1);
-
-        i = s.size() - 1;
-        while (s.at(i--) < 33);
-        if (i != s.size() - 2) s.erase(i + 2);
+        if (!s.empty())
+        {
+            for (i = s.size() - 1; s.at(i) < 33; --i);
+            if (i != s.size() - 1) s.erase(i + 1);
+        }
     }
 }
 
