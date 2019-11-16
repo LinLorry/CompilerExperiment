@@ -1,4 +1,4 @@
-#include <grammar.h>
+#include <compiler/grammar.h>
 #include <fstream>
 #include <iostream>
 #include <string>
