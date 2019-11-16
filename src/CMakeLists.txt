@@ -1,7 +1,7 @@
-add_library(Grammar grammar.cpp)
+add_library(Compiler grammar.cpp grammar_utils.cpp)
 
-link_libraries(Grammar)
+link_libraries(Compiler)
 
-add_subdirectory(input_output)
+add_subdirectory(lexical_analysis)
 
 add_subdirectory(lexical_analysis)

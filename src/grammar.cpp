@@ -1,12 +1,12 @@
-#include <grammar.h>
+#include <compiler/grammar.h>
 
-namespace Compile
+namespace Compiler
 {
     grammar::grammar() : vn(), vt(), production() { }
 
     grammar::~grammar() { }
 
-    void grammar::add_production(const VN_TYPE begin, const string & end)
+    void grammar::add_production(const VN_TYPE begin, const std::string & end)
     {
         ProIterator iter = production.find(begin);
 
@@ -16,9 +16,9 @@ namespace Compile
         }
         else
         {
-            set<string> *ends = new set<string>();
+            std::set<std::string> *ends = new std::set<std::string>();
             ends->insert(end);
             production.insert(*(new ProPair(begin, *ends)));
         }
     }
-} // namespace Compile
+} // namespace Compiler
