@@ -53,6 +53,8 @@ namespace Compiler
         void eliminate_left_recursion();
 
         void eliminate_unneed_vn();
+
+        void extract_left_divisor();
     private:
         const VN_TYPE get_unuse_vn() const;
 
@@ -61,6 +63,8 @@ namespace Compiler
         void eliminate_one_left_recursion(const VN_TYPE elem);
 
         void eliminate_unneed_vn(const VN_TYPE elem, std::set<VN_TYPE> & s);
+        
+        void extract_one_left_divisor(const VN_TYPE elem);
     };
 
     void grammar::set_start(const VN_TYPE s)

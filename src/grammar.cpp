@@ -56,6 +56,12 @@ namespace Compiler
             else ++iter;
     }
 
+    void grammar::extract_left_divisor()
+    {
+        for (VN_TYPE ch : vn)
+            this->extract_one_left_divisor(ch);
+    }
+
     const VN_TYPE grammar::get_unuse_vn() const
     {
         VN_TYPE result;
@@ -102,8 +108,8 @@ namespace Compiler
                 {
                     other = this->get_unuse_vn();
                     vn.insert(other);
-                    vt.insert('ε');
-                    this->add_production(other, "ε");
+                    vt.insert('@');
+                    this->add_production(other, "@");
                 }
                 this->add_production(other, iter->substr(1, iter->size()) + other);
                 iter = p.erase(iter);
@@ -130,5 +136,59 @@ namespace Compiler
             for (char ch : str)
                 if (isupper(ch) && s.find(ch) == s.end())
                     this->eliminate_unneed_vn(ch ,s);
+    }
+
+    void grammar::extract_one_left_divisor(const VN_TYPE elem)
+    {
+        std::set<std::string> & this_production = production.at(elem);
+        std::map<char, std::string> save_map;
+        std::map<char, VN_TYPE> new_vn_map;
+
+        for (auto iter = this_production.cbegin(); iter != this_production.cend();)
+        {
+            const char ch = iter->at(0);
+            auto save_find = save_map.find(ch);
+
+            if (save_find == save_map.end())
+            {
+                save_map.insert(std::pair<char, std::string>(ch, *iter));
+                ++iter;
+            }
+            else
+            {
+                VN_TYPE other;
+                auto map_iter = new_vn_map.find(ch);
+
+                if (map_iter == new_vn_map.end())
+                {
+                    std::string s;
+                    other = this->get_unuse_vn();
+                    vn.insert(other);
+                    
+                    new_vn_map.insert(std::pair<char, VN_TYPE>(ch, other));
+                    const std::string & str = save_find->second;
+                    if (str.size() == 1)
+                        this->add_production(other, "@");
+                    else 
+                        this->add_production(other, str.substr(1, str.size()));
+                    
+                    s += ch;
+                    s += other;
+                    this_production.insert(s);
+                    this_production.erase(save_find->second);
+                }
+                else other = map_iter->second;
+
+                if (iter->size() == 1)
+                    this->add_production(other, "@");
+                else 
+                    this->add_production(other, iter->substr(1, iter->size()));
+                
+                iter = this_production.erase(iter);
+            }
+        }
+
+        for (auto pair : new_vn_map)
+            this->extract_one_left_divisor(pair.second);
     }
 } // namespace Compiler
