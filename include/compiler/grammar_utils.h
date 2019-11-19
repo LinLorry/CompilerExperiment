@@ -9,7 +9,7 @@ namespace Compiler
 
     void deal_with_left(grammar & g, const std::string & right, bool & first);
 
-    void deal_with_right(grammar & g, const std::string & left);
+    void deal_with_right(grammar & g, const VN_TYPE vn, const std::string & left);
 } // namespace Compiler
 
 #endif // COMPILER_UTILS_H

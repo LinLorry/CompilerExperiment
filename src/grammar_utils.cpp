@@ -40,9 +40,7 @@ namespace Compiler
             std::string right = s.substr(index+2);
 
             deal_with_left(g, left, first);
-            deal_with_right(g, right);
-
-            g.add_production(left.at(0), right);
+            deal_with_right(g, left.at(0), right);
         }
 
         return g;
@@ -59,15 +57,30 @@ namespace Compiler
         g.add_vn(right.at(0));
     }
 
-    void deal_with_right(grammar & g, const std::string & left)
+    void deal_with_right(grammar & g, const VN_TYPE vn, const std::string & right)
     {
-        for (char ch : left)
+        std::string::const_iterator i;
+        std::string::const_iterator j;
+
+        for (i = right.cbegin(), j = right.cbegin(); i != right.cend();)
         {
-            if (isupper(ch))
-                g.add_vn(ch);
+            if (*i == '|')
+            {
+                g.add_production(vn, std::string(j, i));
+                j = ++i;
+            }
             else
-                g.add_vt(ch);
+            {
+                if (isupper(*i))
+                    g.add_vn(*i);
+                else
+                    g.add_vt(*i);
+                ++i;
+            }
         }
+
+        if (j != i)
+            g.add_production(vn, std::string(j, i));
     }   
 } // namespace Compiler
 
