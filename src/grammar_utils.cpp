@@ -15,7 +15,7 @@ namespace Compiler
     
         if (!fin.is_open())
         {
-            std::cout << "Can't open " << filename << std::endl;
+            std::cerr << "Can't open " << filename << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -81,7 +81,30 @@ namespace Compiler
 
         if (j != i)
             g.add_production(vn, std::string(j, i));
-    }   
+    }
+
+    void write_grammar_in_file(const grammar g, char *filename)
+    {
+        std::ofstream fout = std::ofstream(filename, std::ios_base::out);
+
+        if (!fout.is_open())
+        {
+            std::cerr << "Can't open " << filename << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        for (ProPair pair: g.get_production())
+        {
+            std::string tmp;
+            tmp += pair.first;
+            tmp += "->";
+
+            for (std::string s : pair.second)
+            {
+                tmp += s + "|";
+            }
+            tmp.back() = ';';
+            fout << tmp << std::endl;
+        }
+    }
 } // namespace Compiler
-
-

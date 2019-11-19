@@ -10,9 +10,9 @@ using namespace Compiler;
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 3)
     {
-        printf("Usage: %s filename\n", argv[0]);
+        printf("Usage: %s \"input filename\" \"output filename\"\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     grammar g = create_grammar_by_file(argv[1]);
@@ -41,4 +41,6 @@ int main(int argc, char *argv[])
         tmp.back() = ';';
         cout << tmp << endl;
     }
+
+    write_grammar_in_file(g, argv[2]);
 }
