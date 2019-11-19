@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     }
     grammar g = create_grammar_by_file(argv[1]);
     
-    g.eliminate_left_recursion();
+    g.construct_LL1();
 
     cout << "The result:" << endl;
     

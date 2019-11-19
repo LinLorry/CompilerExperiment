@@ -50,21 +50,24 @@ namespace Compiler
 
         inline const Production & get_production() const;
 
-        void eliminate_left_recursion();
+        void construct_LL1();
 
-        void eliminate_unneed_vn();
-
-        void extract_left_divisor();
     private:
-        const VN_TYPE get_unuse_vn() const;
-
-        void eliminate_indirect_recursion(const VN_TYPE i, const VN_TYPE j);
+        void eliminate_left_recursion();
 
         void eliminate_one_left_recursion(const VN_TYPE elem);
 
+        void eliminate_indirect_recursion(const VN_TYPE i, const VN_TYPE j);
+
+        void eliminate_unneed_vn();
+
         void eliminate_unneed_vn(const VN_TYPE elem, std::set<VN_TYPE> & s);
-        
+
+        void extract_left_divisor();
+
         void extract_one_left_divisor(const VN_TYPE elem);
+
+        const VN_TYPE get_unuse_vn() const;    
     };
 
     void grammar::set_start(const VN_TYPE s)

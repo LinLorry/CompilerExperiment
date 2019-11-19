@@ -22,6 +22,12 @@ namespace Compiler
         }
     }
 
+    void grammar::construct_LL1()
+    {
+        this->eliminate_left_recursion();
+        this->extract_left_divisor();
+    }
+
     void grammar::eliminate_left_recursion()
     {
         std::set<VN_TYPE>::const_iterator vn_i_citer;
@@ -37,60 +43,6 @@ namespace Compiler
         }
 
         eliminate_unneed_vn();
-    }
-
-    void grammar::eliminate_unneed_vn()
-    {
-        std::set<VN_TYPE> s;
-        std::set<VN_TYPE> unneed;
-        this->eliminate_unneed_vn(start, s);
-
-        std::set<VN_TYPE>::const_iterator iter;
-
-        for (iter = vn.cbegin(); iter != vn.cend(); )
-            if (s.find(*iter) == s.end())
-            {
-                production.erase(*iter);
-                iter = vn.erase(iter);
-            }
-            else ++iter;
-    }
-
-    void grammar::extract_left_divisor()
-    {
-        for (VN_TYPE ch : vn)
-            this->extract_one_left_divisor(ch);
-    }
-
-    const VN_TYPE grammar::get_unuse_vn() const
-    {
-        VN_TYPE result;
-        for (result = 'A'; vn.find(result) != vn.end() && result <= 'Z'; ++result) ;
-        if (result > 'Z')
-            throw "Don't have other VT!";
-        return result; 
-    }
-
-    void grammar::eliminate_indirect_recursion(const VN_TYPE i, const VN_TYPE j)
-    {
-        std::set<std::string> & i_set = production.at(i);
-        std::set<std::string> & j_set = production.at(j);
-
-        std::set<std::string>::const_iterator i_iter;
-        std::set<std::string>::const_iterator j_iter;
-
-        for(i_iter = i_set.cbegin(); i_iter != i_set.cend(); )
-        {
-            if (i_iter->at(0) == j)
-            {
-                for (j_iter = j_set.cbegin(); j_iter != j_set.cend(); ++j_iter)
-                {
-                    i_set.insert(*j_iter + i_iter->substr(1, i_iter->size()));
-                }
-                i_iter = i_set.erase(i_iter);
-            }
-            else ++i_iter;
-        }
     }
 
     void grammar::eliminate_one_left_recursion(VN_TYPE elem)
@@ -128,6 +80,45 @@ namespace Compiler
         }
     }
 
+    void grammar::eliminate_indirect_recursion(const VN_TYPE i, const VN_TYPE j)
+    {
+        std::set<std::string> & i_set = production.at(i);
+        std::set<std::string> & j_set = production.at(j);
+
+        std::set<std::string>::const_iterator i_iter;
+        std::set<std::string>::const_iterator j_iter;
+
+        for(i_iter = i_set.cbegin(); i_iter != i_set.cend(); )
+        {
+            if (i_iter->at(0) == j)
+            {
+                for (j_iter = j_set.cbegin(); j_iter != j_set.cend(); ++j_iter)
+                {
+                    i_set.insert(*j_iter + i_iter->substr(1, i_iter->size()));
+                }
+                i_iter = i_set.erase(i_iter);
+            }
+            else ++i_iter;
+        }
+    }
+
+    void grammar::eliminate_unneed_vn()
+    {
+        std::set<VN_TYPE> s;
+        std::set<VN_TYPE> unneed;
+        this->eliminate_unneed_vn(start, s);
+
+        std::set<VN_TYPE>::const_iterator iter;
+
+        for (iter = vn.cbegin(); iter != vn.cend(); )
+            if (s.find(*iter) == s.end())
+            {
+                production.erase(*iter);
+                iter = vn.erase(iter);
+            }
+            else ++iter;
+    }
+
     void grammar::eliminate_unneed_vn(const VN_TYPE elem, std::set<VN_TYPE> & s)
     {
         s.insert(elem);
@@ -136,6 +127,12 @@ namespace Compiler
             for (char ch : str)
                 if (isupper(ch) && s.find(ch) == s.end())
                     this->eliminate_unneed_vn(ch ,s);
+    }
+
+    void grammar::extract_left_divisor()
+    {
+        for (VN_TYPE ch : vn)
+            this->extract_one_left_divisor(ch);
     }
 
     void grammar::extract_one_left_divisor(const VN_TYPE elem)
@@ -190,5 +187,14 @@ namespace Compiler
 
         for (auto pair : new_vn_map)
             this->extract_one_left_divisor(pair.second);
+    }
+
+    const VN_TYPE grammar::get_unuse_vn() const
+    {
+        VN_TYPE result;
+        for (result = 'A'; vn.find(result) != vn.end() && result <= 'Z'; ++result) ;
+        if (result > 'Z')
+            throw "Don't have other VT!";
+        return result; 
     }
 } // namespace Compiler
