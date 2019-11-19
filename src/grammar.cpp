@@ -1,12 +1,17 @@
 #include <compiler/grammar.h>
 
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
+
 namespace Compiler
 {
     grammar::grammar() : vn(), vt(), production() { }
 
     grammar::~grammar() { }
 
-    void grammar::add_production(const VN_TYPE begin, const std::string & end)
+    void grammar::add_production(const VN_TYPE begin, const string & end)
     {
         ProIterator iter = production.find(begin);
 
@@ -16,7 +21,7 @@ namespace Compiler
         }
         else
         {
-            std::set<std::string> *ends = new std::set<std::string>();
+            set<string> *ends = new set<string>();
             ends->insert(end);
             production.insert(*(new ProPair(begin, *ends)));
         }
@@ -30,8 +35,8 @@ namespace Compiler
 
     void grammar::eliminate_left_recursion()
     {
-        std::set<VN_TYPE>::const_iterator vn_i_citer;
-        std::set<VN_TYPE>::const_iterator vn_j_citer;
+        set<VN_TYPE>::const_iterator vn_i_citer;
+        set<VN_TYPE>::const_iterator vn_j_citer;
 
         for (vn_i_citer = vn.cbegin(); vn_i_citer != vn.cend(); ++vn_i_citer)
         {
@@ -47,9 +52,9 @@ namespace Compiler
 
     void grammar::eliminate_one_left_recursion(VN_TYPE elem)
     {
-        std::set<std::string> & p = production.at(elem);
-        std::set<std::string> new_set;
-        std::set<std::string>::const_iterator iter;
+        set<string> & p = production.at(elem);
+        set<string> new_set;
+        set<string>::const_iterator iter;
         VN_TYPE other = 0;
 
         for (iter = p.cbegin(); iter != p.cend();)
@@ -82,11 +87,11 @@ namespace Compiler
 
     void grammar::eliminate_indirect_recursion(const VN_TYPE i, const VN_TYPE j)
     {
-        std::set<std::string> & i_set = production.at(i);
-        std::set<std::string> & j_set = production.at(j);
+        set<string> & i_set = production.at(i);
+        set<string> & j_set = production.at(j);
 
-        std::set<std::string>::const_iterator i_iter;
-        std::set<std::string>::const_iterator j_iter;
+        set<string>::const_iterator i_iter;
+        set<string>::const_iterator j_iter;
 
         for(i_iter = i_set.cbegin(); i_iter != i_set.cend(); )
         {
@@ -104,11 +109,11 @@ namespace Compiler
 
     void grammar::eliminate_unneed_vn()
     {
-        std::set<VN_TYPE> s;
-        std::set<VN_TYPE> unneed;
+        set<VN_TYPE> s;
+        set<VN_TYPE> unneed;
         this->eliminate_unneed_vn(start, s);
 
-        std::set<VN_TYPE>::const_iterator iter;
+        set<VN_TYPE>::const_iterator iter;
 
         for (iter = vn.cbegin(); iter != vn.cend(); )
             if (s.find(*iter) == s.end())
@@ -119,11 +124,11 @@ namespace Compiler
             else ++iter;
     }
 
-    void grammar::eliminate_unneed_vn(const VN_TYPE elem, std::set<VN_TYPE> & s)
+    void grammar::eliminate_unneed_vn(const VN_TYPE elem, set<VN_TYPE> & s)
     {
         s.insert(elem);
-        const std::set<std::string> & p = production.at(elem);
-        for (std::string str : p)
+        const set<string> & p = production.at(elem);
+        for (string str : p)
             for (char ch : str)
                 if (isupper(ch) && s.find(ch) == s.end())
                     this->eliminate_unneed_vn(ch ,s);
@@ -137,9 +142,9 @@ namespace Compiler
 
     void grammar::extract_one_left_divisor(const VN_TYPE elem)
     {
-        std::set<std::string> & this_production = production.at(elem);
-        std::map<char, std::string> save_map;
-        std::map<char, VN_TYPE> new_vn_map;
+        set<string> & this_production = production.at(elem);
+        map<char, string> save_map;
+        map<char, VN_TYPE> new_vn_map;
 
         for (auto iter = this_production.cbegin(); iter != this_production.cend();)
         {
@@ -148,7 +153,7 @@ namespace Compiler
 
             if (save_find == save_map.end())
             {
-                save_map.insert(std::pair<char, std::string>(ch, *iter));
+                save_map.insert(pair<char, string>(ch, *iter));
                 ++iter;
             }
             else
@@ -158,12 +163,12 @@ namespace Compiler
 
                 if (map_iter == new_vn_map.end())
                 {
-                    std::string s;
+                    string s;
                     other = this->get_unuse_vn();
                     vn.insert(other);
                     
-                    new_vn_map.insert(std::pair<char, VN_TYPE>(ch, other));
-                    const std::string & str = save_find->second;
+                    new_vn_map.insert(pair<char, VN_TYPE>(ch, other));
+                    const string & str = save_find->second;
                     if (str.size() == 1)
                         this->add_production(other, "@");
                     else 

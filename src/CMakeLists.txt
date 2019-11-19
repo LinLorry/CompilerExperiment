@@ -1,4 +1,4 @@
-add_library(Compiler grammar.cpp grammar_utils.cpp)
+add_library(Compiler grammar.cpp grammar_utils.cpp lexical_analysis.cpp)
 
 link_libraries(Compiler)
 

@@ -1,5 +1,5 @@
-#ifndef COMPILE_GRAMMAR_H
-#define COMPILE_GRAMMAR_H
+#ifndef COMPILER_GRAMMAR_H
+#define COMPILER_GRAMMAR_H
 
 #include <set>
 #include <string>
@@ -97,5 +97,5 @@ namespace Compiler
 
 } // namespace Compiler
 
-#endif // COMPILE_GRAMMAR_H
+#endif // COMPILER_GRAMMAR_H
 
