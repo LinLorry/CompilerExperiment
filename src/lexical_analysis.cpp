@@ -5,9 +5,9 @@ using std::string;
 namespace Compiler
 {
     LexicalAnalysisMachine::LexicalAnalysisMachine(const char *filename) 
-        : fin(filename, std::ios_base::in), p(nullptr), result(EMPTY) { }
+        : fin(filename, std::ios_base::in), p(nullptr), result(ERROR) { }
     LexicalAnalysisMachine::LexicalAnalysisMachine(const std::string &filename)
-        : fin(filename, std::ios_base::in), p(nullptr), result(EMPTY) { }
+        : fin(filename, std::ios_base::in), p(nullptr), result(ERROR) { }
 
     const bool LexicalAnalysisMachine::next()
     {

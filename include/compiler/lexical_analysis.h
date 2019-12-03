@@ -13,8 +13,7 @@ namespace Compiler
         DIGUT,
         OCT,
         HEX,
-        KEY,
-        EMPTY
+        KEY
     };
 
     class LexicalAnalysisMachine

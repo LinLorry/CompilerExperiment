@@ -45,8 +45,6 @@ int main(int argc, char *argv[])
         case LEXICAL_RESULT::KEY:
             cout << "<" << lam.get_token() << ", " << "->" << endl;
             break;
-        case LEXICAL_RESULT::EMPTY:
-            break;
         case LEXICAL_RESULT::ERROR:
             cout << "ERROR" << endl;
             exit(EXIT_FAILURE);
