@@ -1,3 +1,3 @@
-project(structure_LL1)
+project(StructureLL1)
 
-add_executable(structure_LL1 structure_LL1.cpp)
+add_executable(StructureLL1 structure_LL1.cpp)

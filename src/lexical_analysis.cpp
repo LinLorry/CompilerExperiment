@@ -4,64 +4,39 @@ using std::string;
 
 namespace Compiler
 {
-    inline bool isoct(const char c)
+    LexicalAnalysisMachine::LexicalAnalysisMachine(const char *filename) 
+        : fin(filename, std::ios_base::in), p(nullptr), result(EMPTY) { }
+    LexicalAnalysisMachine::LexicalAnalysisMachine(const std::string &filename)
+        : fin(filename, std::ios_base::in), p(nullptr), result(EMPTY) { }
+
+    const bool LexicalAnalysisMachine::next()
     {
-        return c < '8' && c > '0' - 1; // '0' 48
-    }
+        skipblank();
 
-    inline bool ishex(const char c)
-    {
-        return (c < '9' + 1 && c > '0' + 1) || (c < 'g' && c > 'a' - 1); // '0' 48 '9' 57 'a' 97
-    }
+        if (p == nullptr || *p == 0) return false;
 
-    inline const char *skipblank(const char *p)
-    {
-        while (*p < 33 && *p != 0) ++p;
-
-        return p;
-    }
-
-    const bool iskeyword(const string & s)
-    {
-        switch (s.at(0))
-        {
-        case 'd': return s.compare("do") == 0;
-        case 'e': return s.compare("else") == 0;
-        case 'i': return s.compare("if") == 0;
-        case 't': return s.compare("then") == 0;
-        case 'w': return s.compare("where") == 0;   
-        default:  return false;
-        }
-    }
-
-    LEXICAL_RESULT scan(const char *buffer, string & s, size_t *index)
-    {
-        const char *p = buffer;
-        p = skipblank(p);
-        if (*p == 0) return EMPTY;
-
-        LEXICAL_RESULT result;
-        s.erase(s.cbegin(), s.cend());
-        s += *p;
+        tokenInit();
 
         if (isalpha(*p))
         {
-            while (isalnum(*(++p)))
-                s += *p;
+            add();
+            while (isalnum(*p))
+                add();
 
-            if (iskeyword(s)) result = KEY;
+            if (iskeyword()) result = KEY;
             else result = IDENTIFICATION;
         }
         else if (*p == '0')
         {
-            if (*(++p) == 'x' || *p == 'X')
+            add();
+            if (*p == 'x' || *p == 'X')
             {
-                s += *p;
-                if (ishex(*++p))
+                add();
+                if (ishex(*p))
                 {
-                    s += *p;
-                    while (ishex(*(++p)))
-                        s += *p;
+                    add();
+                    while (ishex(*p))
+                        add();
                     result = HEX;
                 }
                 else result = ERROR;
@@ -70,9 +45,9 @@ namespace Compiler
             {
                 if (*p != '0' && *p != '8' && *p != '9')
                 {
-                    s += *p;
-                    while (isoct(*++p))
-                        s += *p;
+                    add();
+                    while (isoct(*p))
+                        add();
                     result = OCT;
                 }
                 else result = ERROR;
@@ -81,15 +56,45 @@ namespace Compiler
         }
         else if (isdigit(*p))
         {
-            while (isdigit(*(++p)))
-            {
-                s += *p;
-            }
+            add();
+            while (isdigit(*p))
+                add();
             result = DIGUT;
         }
-        else ++p, result = KEY;
+        else add(), result = KEY;
 
-        *index += (p - buffer);
-        return result;
+        return true;
+    } 
+
+    const bool LexicalAnalysisMachine::iskeyword() const
+    {
+        switch (token.at(0))
+        {
+        case 'd': return token.compare("do") == 0;
+        case 'e': return token.compare("else") == 0;
+        case 'i': return token.compare("if") == 0;
+        case 't': return token.compare("then") == 0;
+        case 'w': return token.compare("where") == 0;   
+        default:  return false;
+        }
     }
+
+    void LexicalAnalysisMachine::skipblank()
+    {
+        if (p != nullptr)
+            while (*p < 33 && *p > 0) ++p;
+        
+        while ((p == nullptr || *p == 0) && getline(fin, tmp))
+        {
+            if (tmp.empty()) continue;
+            tmp.erase(0,tmp.find_first_not_of(" "));
+            if (tmp.empty()) continue;
+            tmp.erase(tmp.find_last_not_of(" ") + 1);
+
+            p = tmp.c_str();
+
+            while (*p < 33 && *p > 0) ++p;
+        }
+    }
+
 } // namespace Compiler
