@@ -50,6 +50,10 @@ namespace Compiler
 
         inline const Production & get_production() const;
 
+        inline bool is_vt(char ch) const;
+
+        inline bool is_vn(char ch) const;
+
         void construct_LL1();
 
     private:
@@ -94,6 +98,10 @@ namespace Compiler
     Production & grammar::get_production() { return production; }
 
     const Production & grammar::get_production() const { return production; }
+
+    bool grammar::is_vt(char ch) const { return vt.find(ch) != vt.cend(); }
+
+    bool grammar::is_vn(char ch) const { return vn.find(ch) != vn.cend(); }
 
 } // namespace Compiler
 
