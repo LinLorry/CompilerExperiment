@@ -13,7 +13,12 @@ namespace Compiler
     {
         skipblank();
 
-        if (p == nullptr || *p == 0) return false;
+        if (p == nullptr || *p == 0) 
+        {
+            result = END;
+            token = "#";
+            return false;
+        }
 
         tokenInit();
 
