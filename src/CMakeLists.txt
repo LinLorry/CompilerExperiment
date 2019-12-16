@@ -7,3 +7,5 @@ add_subdirectory(lexical_analysis)
 add_subdirectory(structure_LL1)
 
 add_subdirectory(operator_precedence)
+
+add_subdirectory(reverse_polish)
