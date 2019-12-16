@@ -33,6 +33,23 @@ namespace Compiler
         this->extract_left_divisor();
     }
 
+    const VN_TYPE grammar::fuzzy_reduced(const std::string &str) const
+    {
+        size_t index;
+        for (const VN_TYPE one : vn)
+            for (auto pro : production.find(one)->second)
+                if (str.size() == pro.size())
+                {
+                    for (index = 0; index < str.size(); ++index)
+                        if (is_vt(pro.at(index)) && str.at(index) != pro.at(index))
+                            break;
+
+                    if (index == str.size()) return one;
+                }
+
+        throw ReduceException();
+    }
+
     void grammar::eliminate_left_recursion()
     {
         set<VN_TYPE>::const_iterator vn_i_citer;

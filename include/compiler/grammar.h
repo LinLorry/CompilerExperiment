@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+#include <compiler/exception.h>
+
 namespace Compiler
 {
     typedef char VT_TYPE;
@@ -12,7 +14,7 @@ namespace Compiler
     typedef std::map<VN_TYPE, std::set<std::string>> Production;
     typedef Production::iterator ProIterator;
     typedef std::pair<VN_TYPE, std::set<std::string>> ProPair;
-
+    
     class grammar
     {
     private:
@@ -55,6 +57,8 @@ namespace Compiler
         inline bool is_vn(char ch) const;
 
         void construct_LL1();
+
+        const VT_TYPE fuzzy_reduced(const std::string & str) const;
 
     private:
         void eliminate_left_recursion();
