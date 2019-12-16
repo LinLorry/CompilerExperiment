@@ -44,7 +44,10 @@ namespace Compiler
                         add();
                     result = HEX;
                 }
-                else result = ERROR;
+                else {
+                    add();
+                    result = ERROR;
+                }
             }
             else if (isdigit(*p))
             {
@@ -55,7 +58,10 @@ namespace Compiler
                         add();
                     result = OCT;
                 }
-                else result = ERROR;
+                else {
+                    add();
+                    result = ERROR;
+                }
             }
             else result = DIGUT;        
         }
