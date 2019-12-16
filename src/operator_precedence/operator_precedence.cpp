@@ -2,7 +2,6 @@
 #include <compiler/lexical_analysis.h>
 #include <compiler/operator_precedence.h>
 
-#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -16,6 +15,8 @@ using Compiler::LexicalAnalysisMachine;
 using Compiler::LEXICAL_RESULT;
 using Compiler::orecednece_judgment;
 
+void dealWithReduceError(const string & str, const grammar & g);
+
 int main(int argc, char *argv[]) 
 {
     if (argc != 3)
@@ -28,10 +29,13 @@ int main(int argc, char *argv[])
     unsigned k = 0;
     unsigned index = 0;
     char token, tmp, N;
-    string s = "#";
-    short next = 0;
+    string stack = "#";
+    string str_tmp;
+    bool next = 0;
 
-    if (machine.isOpen())
+    char ch;
+
+    if (!machine.isOpen())
     {
         cerr << "Input filename isn't exist!" << endl;
         exit(EXIT_FAILURE);
@@ -39,7 +43,8 @@ int main(int argc, char *argv[])
 
     do
     {
-        machine.next();
+        next = machine.next();
+        str_tmp += machine.get_token();
 
         switch (machine.get_result())
         {
@@ -51,92 +56,98 @@ int main(int argc, char *argv[])
         case LEXICAL_RESULT::END: token = machine.get_token().at(0); break;
         case LEXICAL_RESULT::ERROR:
         default:
-            cerr << "ERROR::INPUT IS NOT VAILD\n";
-            while (machine.next() && machine.get_token().at(0) != ';') ;
-            if (machine.get_token().at(0) == ';')
-            {
-                s += '#';
-                token = ';';
-            }
-            else token = '#';
-
-            continue;            
+            cerr << "出现无效字符： "<< machine.get_token() << endl;
+            continue;          
         }
 
-        if (token == ';')
-        {
-            token = '#';
-            next = 1;
-        }
+        if (!next && str_tmp.size() == 1) break;
+
+        if (token == ';') token = '#';
         
-        if (s.at(k) == '#' || g.is_vt(s.at(k))) index = k;
+        if (stack.at(k) == '#' || g.is_vt(stack.at(k))) index = k;
         else index = k - 1;
 
         try
         {
-            while (orecednece_judgment(s.at(index), token) == 1)
+            while (orecednece_judgment(stack.at(index), token) == 1)
             {
                 do
                 {
-                    tmp = s.at(index);
-                    if (s.at(index - 1) == '#' || g.is_vt(s.at(index - 1))) --index;
+                    tmp = stack.at(index);
+                    if (stack.at(index - 1) == '#' || g.is_vt(stack.at(index - 1))) --index;
                     else index -= 2;
-                    
                 } 
-                while (orecednece_judgment(s.at(index), tmp) != -1);
+                while (orecednece_judgment(stack.at(index), tmp) != -1);
 
-                N = Compiler::reduced(s.substr(index + 1, k));
-                s.erase(index + 1, k - index - 1);
+                N = g.fuzzy_reduced(stack.substr(index + 1, k));
+                stack.erase(index + 1, k - index - 1);
                 k = index + 1;
-                s.at(k) = N; 
+                stack.at(k) = N; 
             }
         } 
         catch (const char *e) 
         {
-            cerr << "ERROR::" << e << "::AT '" << machine.get_token() << "'\n";
-            
-            while (machine.get_token().at(0) != ';' && machine.next()) ;
-            if (machine.get_token().at(0) == ';')
+            cerr << e << endl;
+        }
+        catch (const Compiler::ReduceException e)
+        {
+            dealWithReduceError(stack.substr(index + 1, k), g);
+        }
+
+        try
+        {
+            if (orecednece_judgment(stack.at(index), token) != 1)
             {
-                s += '#';
-                token = ';';
+                ++k;
+                stack += token;
             }
-            else token = '#';
-            next = 0;
-            ++k;
-
-            continue; 
-        }
-        
-        if (orecednece_judgment(s.at(index), token) != 1)
-        {
-            ++k;
-            s += token;
-        }
-        else
-        {
-            cerr << "ERROR::AT '" << machine.get_token() << "'\n";
-            while (machine.get_token().at(0) != ';' && machine.next()) ;
-            if (machine.get_token().at(0) == ';')
+            else
             {
-                s += '#';
-                token = ';';
+                cerr << "ERROR::AT '" << machine.get_token() << "'\n";
             }
-            else token = '#';
-            next = 0;
-            ++k;
-
-            continue; 
         }
-        
-
-        if (next) 
+        catch (const char *e) 
         {
-            token = ';';
-            next = 0;
+            cerr << e << endl;
         }
-        
-    } while (token != '#');
 
-    cout << s << endl;
+        if (token == '#')
+        {
+            cout << "字符串： " << str_tmp << " 判断结束" << endl;
+            str_tmp = "";
+        }
+
+    } while (next);
+
+    cout << stack << endl;
+}
+
+void dealWithReduceError(const string & str, const grammar & g)
+{
+    size_t i, j;
+    if (
+        (i = str.find('(')) != str.npos && 
+        (j = str.find(')')) != str.npos && 
+        j - i == 2 && 
+        !g.is_vn(str.at(i+1))
+    ) cerr << "括号间无表达式" << endl;
+    else if (
+        (i = str.find('i')) != str.npos &&
+        (
+            (i > 0 && g.is_vn(str.at(i - 1))) ||
+            (i < str.size() - 1 && g.is_vn(str.at(i + 1)))
+        )
+    ) cerr << "表达式间无运算符联结" << endl;
+    else if (
+        (
+            (i = str.find('*')) != str.npos || 
+            (i = str.find('+')) != str.npos
+        ) &&
+        (
+            i == 0 ||
+            i == str.size() - 1 ||
+            !g.is_vn(str.at(i - 1)) || 
+            !g.is_vn(str.at(i + 1))
+        )
+    ) cerr << "缺表达式" << endl;
 }
