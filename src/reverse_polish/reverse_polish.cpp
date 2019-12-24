@@ -16,44 +16,34 @@ using Compiler::LexicalAnalysisMachine;
 using Compiler::LEXICAL_RESULT;
 using Compiler::orecednece_judgment;
 
-struct tuple
-{
-    Compiler::LEXICAL_RESULT result;
-    std::string value;
-};
+void transForPolish(const string & str,std::stack<string> & stack);
 
-void transForPolish(const string & str,std::stack<tuple> & stack);
-
-int computePolish(std::stack<tuple> & stack);
+int computePolish(const string & str);
 
 void dealWithReduceError(const string & str, const grammar & g);
 
 int main(int argc, char *argv[]) 
 {
-    // if (argc != 3)
-    // {
-    //     cerr << "Usage: " << argv[0] << "\"grammar filename\" \"input filename\"" << endl; 
-    //     exit(EXIT_FAILURE);
-    // }
-    // grammar g = Compiler::create_grammar_by_file(argv[1]);
-    // LexicalAnalysisMachine machine(argv[2]);
-    grammar g = Compiler::create_grammar_by_file("grammar.txt");
-    LexicalAnalysisMachine machine("input.txt");
+    if (argc != 3)
+    {
+        cerr << "Usage: " << argv[0] << "\"grammar filename\" \"input filename\"" << endl; 
+        exit(EXIT_FAILURE);
+    }
+    grammar g = Compiler::create_grammar_by_file(argv[1]);
+    LexicalAnalysisMachine machine(argv[2]);
     unsigned k = 0;
     unsigned index = 0;
     char token, tmp, N;
     string stack = "#";
-    std::stack<tuple> polish;
+    std::stack<string> polish;
     string str_tmp;
     bool next = 0;
 
-    char ch;
-
-    // if (!machine.isOpen())
-    // {
-    //     cerr << "Input filename isn't exist!" << endl;
-    //     exit(EXIT_FAILURE);
-    // }
+    if (!machine.isOpen())
+    {
+        cerr << "Input filename isn't exist!" << endl;
+        exit(EXIT_FAILURE);
+    }
 
     do
     {
@@ -116,8 +106,18 @@ int main(int argc, char *argv[])
             {
                 ++k;
                 stack += token;
-                if (token != '#')
-                    polish.push({machine.get_result(), machine.get_token()});
+
+                if (token != '#') 
+                {
+                    switch (machine.get_result())
+                    {
+                    case LEXICAL_RESULT::IDENTIFICATION: throw "不支持变量！";
+                    case LEXICAL_RESULT::KEY:
+                    case LEXICAL_RESULT::DIGUT: polish.push(machine.get_token());break;
+                    case LEXICAL_RESULT::OCT: polish.push(std::to_string(std::stoi(machine.get_token(), nullptr,8))); break;
+                    case LEXICAL_RESULT::HEX: polish.push(std::to_string(std::stoi(machine.get_token(), nullptr,16))); break;
+                    }
+                }
             }
             else
             {
@@ -131,79 +131,71 @@ int main(int argc, char *argv[])
 
         if (token == '#')
         {
-            cout << "字符串： " << str_tmp << " 判断结束,计算结果为： " << computePolish(polish) << endl;
+            cout << "字符串： " << str_tmp << " 判断结束\n";
+
+            if (polish.size() == 1)
+                cout << "计算结果为：" << computePolish(polish.top()) << endl;
+            else 
+                cout << "波兰表达式有误！" << endl;
+
+            while (!polish.empty())
+                polish.pop();
+
             str_tmp = "";
         }
 
     } while (next);
 }
 
-void transForPolish(const string & str,std::stack<tuple> & stack)
+void transForPolish(const string & str,std::stack<string> & stack)
 {
-    static const tuple plus = { LEXICAL_RESULT::KEY, "+"};
-    static const tuple mut = { LEXICAL_RESULT::KEY, "*"};
-    std::stack<tuple> tmp;
+    string tmp;
 
     if (str.size() == 3)
     {
         if (str.at(0) == '(' && str.at(2) == ')')
         {
             stack.pop();
-            while (stack.top().value.at(0) != '(')
+            while (stack.top().at(0) != '(')
             {
-                tmp.push(stack.top());
+                tmp += stack.top();
                 stack.pop();
             }
 
             stack.pop();
-
-            while (!tmp.empty())
-            {
-                stack.push(tmp.top());
-                tmp.pop();
-            }
-            
+            stack.push(tmp);            
             return ;
         }
         else if (str.at(1) == '+')
         {
 
-            while (stack.top().value.at(0) != '+')
+            while (stack.top().at(0) != '+')
             {   
-                tmp.push(stack.top());
+                tmp += stack.top();
                 stack.pop();
             }
 
             stack.pop();
 
-            while (!tmp.empty())
-            {
-                stack.push(tmp.top());
-                tmp.pop();
-            }
-
-            stack.push(plus);
-
+            tmp = stack.top() + " " + tmp + " +";
+            stack.pop();
+            stack.push(tmp);
 
             return ;
         }
         else if (str.at(1) == '*')
         {
-            while (stack.top().value.at(0) != '*')
+            while (stack.top().at(0) != '*')
             {   
-                tmp.push(stack.top());
+                tmp += stack.top();
                 stack.pop();
             }
 
             stack.pop();
 
-            while (!tmp.empty())
-            {
-                stack.push(tmp.top());
-                tmp.pop();
-            }
-
-            stack.push(mut);
+            tmp = stack.top() + " " + tmp + " *";
+            stack.pop();
+            stack.push(tmp);
 
             return ;
         }
@@ -215,53 +207,59 @@ void transForPolish(const string & str,std::stack<tuple> & stack)
     throw Compiler::ReduceException();
 }
 
-int computePolish(std::stack<tuple> & stack)
+int computePolish(const string & str)
 {
-    bool first = true;
-    int t1 = 0, t2 = 0;
+    string tmp;
+    std::stack<int> num;
 
-    std::stack<int> num_stack;
-    std::stack<tuple> re_stack;
-
-    while (!stack.empty())
+    for (char ch : str)
     {
-        re_stack.push(stack.top());
-        stack.pop();
+        if (ch == ' ')
+        {
+            if (tmp.at(0) == '+')
+            {
+                const int v1 = num.top();
+                num.pop();
+                const int v2 = num.top();
+                num.pop();
+
+                num.push(v1 + v2);
+            }
+            else if (tmp.at(0) == '*')
+            {
+                const int v1 = num.top();
+                num.pop();
+                const int v2 = num.top();
+                num.pop();
+
+                num.push(v1 * v2);
+            }
+            else
+            {
+                num.push(std::stoi(tmp, nullptr,10));
+            }
+            tmp = "";
+        }
+        else
+        {
+            tmp += ch;
+        } 
+    }
+    const int v1 = num.top();
+    num.pop();
+    const int v2 = num.top();
+    num.pop();
+
+    if (tmp.at(0) == '+')
+    {
+        return v1 + v2;
+    }
+    else if (tmp.at(0) == '*')
+    {
+        return v1 * v2;
     }
 
-    while (!re_stack.empty())
-    {
-        if (re_stack.top().result == LEXICAL_RESULT::KEY)
-        {
-            t1 = num_stack.top();
-            num_stack.pop();
-            t2 = num_stack.top();
-            num_stack.pop();
-            if (re_stack.top().value.at(0) == '*')
-            {
-                num_stack.push(t1 * t2);
-            }
-            else if (re_stack.top().value.at(0) == '+')
-            {
-                num_stack.push(t1 + t2);
-            }
-        }
-        else 
-        {
-            switch (re_stack.top().result)
-            {
-            case LEXICAL_RESULT::IDENTIFICATION: throw "不支持变量！";
-            case LEXICAL_RESULT::DIGUT: num_stack.push(std::stoi(re_stack.top().value, nullptr,10)); break;
-            case LEXICAL_RESULT::OCT: num_stack.push(std::stoi(re_stack.top().value, nullptr,8)); break;
-            case LEXICAL_RESULT::HEX: num_stack.push(std::stoi(re_stack.top().value, nullptr,16)); break;
-            case LEXICAL_RESULT::END:
-            case LEXICAL_RESULT::ERROR:
-            default: throw "波兰表达式错误！";
-            }
-        }
-        re_stack.pop();
-    }
-    return num_stack.top();
+    throw "波兰表达式错误！";
 }
 
 void dealWithReduceError(const string & str, const grammar & g)
